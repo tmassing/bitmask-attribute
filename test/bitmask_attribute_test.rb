@@ -128,7 +128,7 @@ class BitmaskAttributeTest < Test::Unit::TestCase
 
     end
 
-    context "named scopes" do
+    context "scopes" do
 
       setup do
         @company = Company.create(:name => "Test Co, Intl.")

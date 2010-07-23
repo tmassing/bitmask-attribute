@@ -1,20 +1,19 @@
-require 'rubygems'
 require 'rake'
 
 begin
   require 'jeweler'
   Jeweler::Tasks.new do |gem|
     gem.name = "bitmask-attribute"
-    gem.summary = %Q{Simple bitmask attribute support for ActiveRecord}
+    gem.summary = %Q{Rails3 compatibile bitmask attribute support for ActiveRecord}
     gem.email = "bruce@codefluency.com"
-    gem.homepage = "http://github.com/bruce/bitmask-attribute"
-    gem.authors = ["Bruce Williams"]
+    gem.homepage = "http://codaset.com/joelmoss/bitmask-attribute"
+    gem.authors = ["Bruce Williams", "Joel Moss"]
     gem.add_dependency 'activerecord'
     # gem is a Gem::Specification... see http://www.rubygems.org/read/chapter/20 for additional settings
   end
   Jeweler::GemcutterTasks.new
 rescue LoadError
-  puts "Jeweler not available. Install it with: sudo gem install technicalpickles-jeweler -s http://gems.github.com"
+  puts "Jeweler not available. Install it with: sudo gem install jeweler"
 end
 
 require 'rake/testtask'
@@ -54,4 +53,3 @@ Rake::RDocTask.new do |rdoc|
   rdoc.rdoc_files.include('README*')
   rdoc.rdoc_files.include('lib/**/*.rb')
 end
-

@@ -1,19 +1,15 @@
 require 'rubygems'
-require 'test/unit'
-require 'shoulda'
-begin
-  require 'redgreen'
-rescue LoadError
-end
+require 'bundler'
 
-require 'active_support'
-require 'active_record'
+Bundler.setup
+require "shoulda"
+require 'test/unit'
 
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 $LOAD_PATH.unshift(File.dirname(__FILE__))
 require 'bitmask-attribute'
-require File.dirname(__FILE__) + '/../rails/init'
 
+# require 'logger'
 # ActiveRecord::Base.logger = Logger.new(STDOUT)
 
 ActiveRecord::Base.establish_connection(
