@@ -1,7 +1,7 @@
 bitmask-attribute
 =================
 
-Transparent manipulation of bitmask attributes.
+Transparent manipulation of bitmask attributes (Rails Compatible).
 
 Example
 -------
