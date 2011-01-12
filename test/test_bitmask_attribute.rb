@@ -1,6 +1,6 @@
 require 'test_helper'
 
-class BitmaskAttributeTest < Test::Unit::TestCase
+class TestBitmaskAttribute < Test::Unit::TestCase
   
   context "Campaign" do
 
