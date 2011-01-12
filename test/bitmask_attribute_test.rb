@@ -62,8 +62,13 @@ class BitmaskAttributeTest < Test::Unit::TestCase
     should "cannot use unsupported values" do
       assert_unsupported { Campaign.new(:medium => [:web, :print, :this_will_fail]) }
       campaign = Campaign.new(:medium => :web)
+      assert campaign.medium.include?(:web)
       assert_unsupported { campaign.medium << :this_will_fail_also }
+      assert !campaign.medium.include?(:this_will_fail_also)
+      assert campaign.medium.include?(:web)
       assert_unsupported { campaign.medium = [:so_will_this] }
+      assert !campaign.medium.include?(:so_will_this)
+      assert campaign.medium.include?(:web)
     end
 
     should "can determine bitmasks using convenience method" do
