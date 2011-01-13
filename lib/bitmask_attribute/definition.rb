@@ -111,8 +111,8 @@ module BitmaskAttribute
               where(sets.join(' AND '))
             end
           }
-        scope :without_#{attribute}, where("#{attribute} == 0 OR #{attribute} IS NULL")
-        scope :no_#{attribute},      where("#{attribute} == 0 OR #{attribute} IS NULL")
+        scope :without_#{attribute}, where("#{attribute} = 0 OR #{attribute} IS NULL")
+        scope :no_#{attribute},      where("#{attribute} = 0 OR #{attribute} IS NULL")
       )
       values.each do |value|
         model.class_eval %(
