@@ -59,16 +59,41 @@ class TestBitmaskAttribute < Test::Unit::TestCase
       assert campaign.misc.worked?
     end
 
-    should "cannot use unsupported values" do
+    should "not use unsupported values" do
+      
       assert_unsupported { Campaign.new(:medium => [:web, :print, :this_will_fail]) }
-      campaign = Campaign.new(:medium => :web)
+      
+      campaign = Campaign.new(:medium => [:web, :print])
       assert campaign.medium.include?(:web)
-      assert_unsupported { campaign.medium << :this_will_fail_also }
-      assert !campaign.medium.include?(:this_will_fail_also)
+      assert campaign.medium.include?(:print)
+      
+      assert_unsupported { campaign.medium << :this_will_also_fail << :email }
+      assert !campaign.medium.include?(:this_will_also_fail)
       assert campaign.medium.include?(:web)
-      assert_unsupported { campaign.medium = [:so_will_this] }
+      assert campaign.medium.include?(:print)
+      assert !campaign.medium.include?(:email)
+      
+      assert_unsupported { campaign.medium << :email << :this_will_fail_also }
+      assert campaign.medium.include?(:web)
+      assert campaign.medium.include?(:print)
+      assert campaign.medium.include?(:email)
+      
+      assert_nothing_raised { campaign.medium = [:phone] }
+      assert_unsupported { campaign.medium = [:so_will_this, :print, :and_this, :email] }
       assert !campaign.medium.include?(:so_will_this)
-      assert campaign.medium.include?(:web)
+      assert !campaign.medium.include?(:and_this)
+      assert !campaign.medium.include?(:print)
+      assert !campaign.medium.include?(:email)
+      assert campaign.medium.include?(:phone)
+      
+      campaign = Campaign.new(:medium => [:web, :print])
+      assert_nothing_raised { campaign.medium.push(:phone, :email)}
+      assert_equal(4, campaign.medium.count)
+      assert_unsupported { campaign.medium.push(:fail1, :fail2) }
+      assert_nothing_raised { campaign.medium.push(:phone, :email) }
+      assert_nothing_raised { campaign.medium << :web << :print }
+      assert_equal(4, campaign.medium.count)
+    
     end
 
     should "can determine bitmasks using convenience method" do
@@ -157,6 +182,7 @@ class TestBitmaskAttribute < Test::Unit::TestCase
 
       should "support retrieval for no values" do
         assert_equal [@campaign2], @company.campaigns.without_medium
+        assert_equal [@campaign2], @company.campaigns.no_medium
       end
 
     end
@@ -172,18 +198,34 @@ class TestBitmaskAttribute < Test::Unit::TestCase
     end
 
     should "find by bitmask values" do
-      campaign = Campaign.new(:medium => [:web, :print])
-      assert campaign.save
+      
+      campaign1 = Campaign.new(:medium => [:web, :print])
+      assert campaign1.save
+      
+      campaign2 = Campaign.new(:medium => [:web])
+      assert campaign2.save
+      
+      campaign3 = Campaign.new(:medium => [:print])
+      assert campaign3.save
       
       assert_equal(
         Campaign.find(:all, :conditions => ['medium & ? <> 0', Campaign.bitmask_for_medium(:print)]),
         Campaign.medium_for_print
       )
       
-      assert_equal Campaign.medium_for_print, Campaign.medium_for_print.medium_for_web
+      assert_equal(
+        Campaign.find(:all, :conditions => ['medium & ? <> 0', Campaign.bitmask_for_medium(:web)]),
+        Campaign.medium_for_web
+      )
+      
+      assert_equal(2, Campaign.medium_for_print.size)
+      assert_equal(2, Campaign.medium_for_web.size)
+      assert_equal(1, Campaign.medium_for_web.medium_for_print.size)
+      assert_equal(1, Campaign.medium_for_print.medium_for_web.size)
       
       assert_equal [], Campaign.medium_for_email
       assert_equal [], Campaign.medium_for_web.medium_for_email
+      
     end
 
     should "find no values" do
