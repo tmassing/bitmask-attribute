@@ -14,7 +14,7 @@ module BitmaskAttribute
     # = OVERRIDE TO SERIALIZE =
     # =========================
     
-    %w(push << delete replace reject! select!).each do |override|
+    %w(<< push).each do |override|
       class_eval(<<-EOEVAL)
         def #{override}(*args)
           super.tap do
@@ -22,6 +22,13 @@ module BitmaskAttribute
           end
         end
       EOEVAL
+    end
+    
+    def replace(other_ary)
+      unsupported_attribute_error_check(other_ary.reject { |i| @mapping.key? i })
+      super.tap do
+        updated!
+      end
     end
     
     def to_i
@@ -32,20 +39,21 @@ module BitmaskAttribute
     private
     #######
     
-    def validate!
-      each do |value|
-        if @mapping.key? value
-          true
-        else
-          raise ArgumentError, "Unsupported value for `#{@attribute}': #{value.inspect}"
-        end
-      end
-    end
-    
     def updated!
       validate!
       uniq!
       serialize!
+    end
+    
+    def validate!
+      return if empty?
+      errors = []
+      dup.each do |value|
+        unless @mapping.key? value
+          errors << delete(value)
+        end
+      end
+      unsupported_attribute_error_check(errors)
     end
     
     def serialize!
@@ -65,6 +73,10 @@ module BitmaskAttribute
       unless (@mapping = @record.class.bitmasks[@attribute])
         raise ArgumentError, "Could not find mapping for bitmask attribute :#{@attribute}"
       end
+    end
+    
+    def unsupported_attribute_error_check(errors)
+      raise ArgumentError, "Unsupported #{"value".pluralize} for '#{@attribute}': #{errors}" unless errors.empty?
     end
       
   end
