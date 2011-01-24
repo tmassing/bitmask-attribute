@@ -1,13 +1,13 @@
-module BitmaskAttribute  
+module BitmaskAttribute
   class Definition
-    
+
     attr_reader :attribute, :values, :extension
     def initialize(attribute, values=[], &extension)
       @attribute = attribute
       @values = values
       @extension = extension
     end
-    
+
     def install_on(model)
       validate_for model
       generate_bitmasks_on model
@@ -16,7 +16,7 @@ module BitmaskAttribute
       create_convenience_instance_methods_on(model)
       create_named_scopes_on(model)
     end
-    
+
     #######
     private
     #######
@@ -31,7 +31,7 @@ module BitmaskAttribute
         raise ArgumentError, "`#{attribute}' is not an attribute of `#{model}'"
       end
     end
-    
+
     def generate_bitmasks_on(model)
       model.bitmasks[attribute] = HashWithIndifferentAccess.new.tap do |mapping|
         values.each_with_index do |value, index|
@@ -39,12 +39,12 @@ module BitmaskAttribute
         end
       end
     end
-    
+
     def override(model)
       override_getter_on(model)
       override_setter_on(model)
     end
-    
+
     def override_getter_on(model)
       model.class_eval %(
         def #{attribute}
@@ -52,7 +52,7 @@ module BitmaskAttribute
         end
       )
     end
-    
+
     def override_setter_on(model)
       model.class_eval %(
         def #{attribute}=(raw_value)
@@ -61,7 +61,7 @@ module BitmaskAttribute
         end
       )
     end
-    
+
     def create_convenience_class_method_on(model)
       model.class_eval %(
         def self.bitmask_for_#{attribute}(*values)
@@ -79,7 +79,7 @@ module BitmaskAttribute
     def create_convenience_instance_methods_on(model)
       values.each do |value|
         model.class_eval %(
-          def #{attribute}_for_#{value}?                  
+          def #{attribute}_for_#{value}?
             self.#{attribute}?(:#{value})
           end
         )
@@ -96,7 +96,7 @@ module BitmaskAttribute
         end
       )
     end
-    
+
     def create_named_scopes_on(model)
       model.class_eval %(
         scope :with_#{attribute},
@@ -111,15 +111,26 @@ module BitmaskAttribute
               where(sets.join(' AND '))
             end
           }
-        scope :without_#{attribute}, where("#{attribute} = 0 OR #{attribute} IS NULL")
+        scope :without_#{attribute},
+          proc { |*values|
+            if values.blank?
+              where('(#{attribute} = 0 OR #{attribute} IS NULL)')
+            else
+              sets = values.map do |value|
+                mask = #{model}.bitmask_for_#{attribute}(value)
+                "(#{attribute} & \#{mask} = 0 OR #{attribute} IS NULL)"
+              end
+              where(sets.join(' AND '))
+            end
+          }
         scope :no_#{attribute},      where("#{attribute} = 0 OR #{attribute} IS NULL")
       )
       values.each do |value|
         model.class_eval %(
           scope :#{attribute}_for_#{value}, where(['#{attribute} & ? <> 0', #{model}.bitmask_for_#{attribute}(:#{value})])
         )
-      end      
+      end
     end
-    
+
   end
 end
